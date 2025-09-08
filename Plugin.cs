@@ -28,6 +28,33 @@ using Util.Commands;
 
 namespace StationeersTest
 {
+
+public class CustomJsonWriter : JsonTextWriter
+{
+    public CustomJsonWriter(TextWriter textWriter)
+      :base (textWriter)
+    { }
+
+    public override void WriteValue(object value)
+    {
+        if (value == null)
+        {
+            base.WriteValue(value);
+            return;
+        }
+
+        var type = value.GetType();
+        if (type == typeof(VolumeLitres))
+            base.WriteValue(((VolumeLitres)value).ToDouble());
+        else if (type == typeof(PressurekPa))
+            base.WriteValue(((PressurekPa)value).ToDouble());
+        else if (type == typeof(TemperatureKelvin))
+            base.WriteValue(((TemperatureKelvin)value).ToDouble());
+        else
+          base.WriteValue(value);
+    }
+}
+
     [BepInPlugin(pluginGuid, pluginName, pluginVersion)]
     public class Plugin : BaseUnityPlugin
     {
@@ -100,7 +127,7 @@ namespace StationeersTest
 
         public Thing OutputThing;
 
-        public void writeToJson(JsonWriter writer)
+        public void writeToJson(CustomJsonWriter writer)
         {
             Thing thing = OutputThing;
             Device device = thing as Device;
@@ -1013,7 +1040,7 @@ namespace StationeersTest
             });
         }
 
-        public void writeToJson(JsonWriter writer)
+        public void writeToJson(CustomJsonWriter writer)
         {
             writer.WriteStartObject();
 
@@ -1070,7 +1097,7 @@ namespace StationeersTest
                 msgs.Add("Writing Stationpedia...");
                 string path = Path.Combine(out_path, "Stationpedia.json");
                 StreamWriter sw = new(path);
-                using (JsonWriter writer = new JsonTextWriter(sw))
+                using (CustomJsonWriter writer = new CustomJsonWriter(sw))
                 {
                     writer.Formatting = Formatting.Indented;
 
@@ -1165,7 +1192,7 @@ namespace StationeersTest
                 msgs.Add("Writing Enums...");
                 string path = Path.Combine(out_path, "Enums.json");
                 StreamWriter sw = new(path);
-                using (JsonWriter writer = new JsonTextWriter(sw))
+                using (CustomJsonWriter writer = new CustomJsonWriter(sw))
                 {
                     writer.Formatting = Formatting.Indented;
                     // writer.WriteStartObject();
