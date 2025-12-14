@@ -2,13 +2,14 @@ using System;
 using BepInEx;
 using HarmonyLib;
 
-namespace ExampleMod
+
+namespace DataExtractor
 {
     [BepInPlugin(pluginGuid, pluginName, pluginVersion)]
-    public class ExampleModPlugin : BaseUnityPlugin
+    public class DataExtractorPlugin : BaseUnityPlugin
     {
-        public const string pluginGuid = "aproposmath-stationeers-example-mod"; // Change this to your own unique Mod ID
-        public const string pluginName = "ExampleMod";
+        public const string pluginGuid = "aproposmath-stationeers-data-extractor"; // Change this to your own unique Mod ID
+        public const string pluginName = "DataExtractor";
         public const string pluginVersion = VersionInfo.Version;
 
         private void Awake()
@@ -19,6 +20,7 @@ namespace ExampleMod
                     $"Awake ${pluginName} {VersionInfo.VersionGit}, build time {VersionInfo.BuildTime}"
                 );
 
+                StationpediaExporter.Logger = Logger;
                 var harmony = new Harmony(pluginGuid);
                 harmony.PatchAll();
             }

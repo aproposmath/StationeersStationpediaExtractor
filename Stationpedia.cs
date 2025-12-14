@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using Assets.Scripts;
 using Assets.Scripts.Atmospherics;
-using Assets.Scripts.Inventory;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Appliances;
 using Assets.Scripts.Objects.Clothing;
@@ -16,65 +13,39 @@ using Assets.Scripts.Objects.Items;
 using Assets.Scripts.Objects.Motherboards;
 using Assets.Scripts.Objects.Pipes;
 using Assets.Scripts.UI;
-using BepInEx;
-using HarmonyLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Objects.Items;
-using Objects.Rockets;
 using Reagents;
 using UnityEngine;
-using Util.Commands;
+using BepInEx.Logging;
 
-namespace StationeersTest
+namespace DataExtractor
 {
 
-public class CustomJsonWriter : JsonTextWriter
-{
-    public CustomJsonWriter(TextWriter textWriter)
-      :base (textWriter)
-    { }
-
-    public override void WriteValue(object value)
+    public class CustomJsonWriter : JsonTextWriter
     {
-        if (value == null)
+        public CustomJsonWriter(TextWriter textWriter)
+          : base(textWriter)
+        { }
+
+        public override void WriteValue(object value)
         {
-            base.WriteValue(value);
-            return;
-        }
+            if (value == null)
+            {
+                base.WriteValue(value);
+                return;
+            }
 
-        var type = value.GetType();
-        if (type == typeof(VolumeLitres))
-            base.WriteValue(((VolumeLitres)value).ToDouble());
-        else if (type == typeof(PressurekPa))
-            base.WriteValue(((PressurekPa)value).ToDouble());
-        else if (type == typeof(TemperatureKelvin))
-            base.WriteValue(((TemperatureKelvin)value).ToDouble());
-        else
-          base.WriteValue(value);
-    }
-}
-
-    [BepInPlugin(pluginGuid, pluginName, pluginVersion)]
-    public class Plugin : BaseUnityPlugin
-    {
-        private const string pluginGuid = "io.inp.stationeers.stationpediaextractor";
-        private const string pluginName = "Stationpedia Extractor";
-        private const string pluginVersion = "1.0.0";
-        private static Plugin instance;
-
-        public static void Log(object line)
-        {
-            instance.Logger.LogInfo(line);
-        }
-
-        private void Awake()
-        {
-            instance = this;
-            // Plugin startup logic
-            Logger.LogInfo($"Plugin {pluginName} is loaded!");
-
-            CommandLine.AddCommand("stationpedia_export", new StationpediaExportCommand());
+            var type = value.GetType();
+            if (type == typeof(VolumeLitres))
+                base.WriteValue(((VolumeLitres)value).ToDouble());
+            else if (type == typeof(PressurekPa))
+                base.WriteValue(((PressurekPa)value).ToDouble());
+            else if (type == typeof(TemperatureKelvin))
+                base.WriteValue(((TemperatureKelvin)value).ToDouble());
+            else
+                base.WriteValue(value);
         }
     }
 
@@ -217,13 +188,13 @@ public class CustomJsonWriter : JsonTextWriter
                 writer.WriteValue(human.NutritionDamageRate);
                 writer.WritePropertyName("DehydrationDamageRateAwake");
                 writer.WriteValue(human.DehydrationDamageRate);
-                var lastState = human.State;
-                human.State = EntityState.Unconscious;
-                writer.WritePropertyName("NutritionDamageRateSleeping");
-                writer.WriteValue(human.NutritionDamageRate);
-                writer.WritePropertyName("DehydrationDamageRateSleeping");
-                writer.WriteValue(human.DehydrationDamageRate);
-                human.State = lastState;
+                // var lastState = human.State;
+                // human.State = EntityState.Unconscious;
+                // writer.WritePropertyName("NutritionDamageRateSleeping");
+                // writer.WriteValue(human.NutritionDamageRate);
+                // writer.WritePropertyName("DehydrationDamageRateSleeping");
+                // writer.WriteValue(human.DehydrationDamageRate);
+                // human.State = lastState;
 
                 writer.WritePropertyName("WarningOxygen");
                 writer.WriteValue(human.WarningOxygen);
@@ -623,7 +594,7 @@ public class CustomJsonWriter : JsonTextWriter
                         }
                         catch (FormatException ex)
                         {
-                            Debug.LogError(
+                            StationpediaExporter.Logger.LogError(
                                 (object)(
                                     "There was an error with text "
                                     + Stationpedia.CreatorItem.Parsed
@@ -815,7 +786,7 @@ public class CustomJsonWriter : JsonTextWriter
                                 }
                                 catch (FormatException ex)
                                 {
-                                    Debug.LogError(
+                                    StationpediaExporter.Logger.LogError(
                                         (object)(
                                             "There was an error with text "
                                             + Stationpedia.CreatorItem.Parsed
@@ -1076,26 +1047,20 @@ public class CustomJsonWriter : JsonTextWriter
         public Dictionary<string, EnumListing> basicEnums;
     }
 
-    class StationpediaExportCommand : CommandBase
+    static class StationpediaExporter
     {
-        public override string HelpText => "Export Stationpedia";
-
-        public override string[] Arguments { get; } = new string[] { };
-
-        public override bool IsLaunchCmd { get; }
-
-        public override string Execute(string[] args)
+        static public ManualLogSource Logger;
+        public static void Execute()
         {
             string out_path = Path.Combine(
                 Path.Combine(Application.dataPath, ".."),
-                "Stationpedia"
+                "data"
             );
             Directory.CreateDirectory(out_path);
-            List<string> msgs = new();
 
             {
-                msgs.Add("Writing Stationpedia...");
-                string path = Path.Combine(out_path, "Stationpedia.json");
+                Logger.LogInfo("Writing Stationpedia...");
+                string path = Path.Combine(out_path, "stationpedia.json");
                 StreamWriter sw = new(path);
                 using (CustomJsonWriter writer = new CustomJsonWriter(sw))
                 {
@@ -1189,8 +1154,8 @@ public class CustomJsonWriter : JsonTextWriter
             }
 
             {
-                msgs.Add("Writing Enums...");
-                string path = Path.Combine(out_path, "Enums.json");
+                Logger.LogInfo("Writing Enums...");
+                string path = Path.Combine(out_path, "enums.json");
                 StreamWriter sw = new(path);
                 using (CustomJsonWriter writer = new CustomJsonWriter(sw))
                 {
@@ -1275,7 +1240,7 @@ public class CustomJsonWriter : JsonTextWriter
                             listing.values[key] = entry;
                         }
 
-                        msgs.Add("Adding Enum " + seTyp.Name + "<" + enumTyp.Name + "> ...");
+                        Logger.LogInfo("Adding Enum " + seTyp.Name + "<" + enumTyp.Name + "> ...");
                         if (seTyp.Name.Contains("ScriptEnum"))
                         {
                             if (!enumsOutput.scriptEnums.ContainsKey(typeName))
@@ -1284,7 +1249,7 @@ public class CustomJsonWriter : JsonTextWriter
                             }
                             else
                             {
-                                msgs.Add("[Warning] Duplicate script enum key: " + typeName);
+                                Logger.LogInfo("[Warning] Duplicate script enum key: " + typeName);
                                 enumsOutput.scriptEnums.Add(typeName + "_" + enumTyp.Name, listing);
                             }
                         }
@@ -1296,13 +1261,13 @@ public class CustomJsonWriter : JsonTextWriter
                             }
                             else
                             {
-                                msgs.Add("[Warning] Duplicate basic enum key: " + typeName);
+                                Logger.LogInfo("[Warning] Duplicate basic enum key: " + typeName);
                                 enumsOutput.basicEnums.Add(typeName + "_" + enumTyp.Name, listing);
                             }
                         }
                         else
                         {
-                            Debug.LogError((object)("Unknown ScriptEnum Type " + seTyp.Name));
+                            Logger.LogInfo((object)("Unknown ScriptEnum Type " + seTyp.Name));
                         }
                     }
                     JObject enumsObj = JObject.FromObject(enumsOutput);
@@ -1311,8 +1276,6 @@ public class CustomJsonWriter : JsonTextWriter
                     // writer.WriteEnd();
                 }
             }
-
-            return String.Join("\n", msgs) + "\nFiles saved to " + out_path;
         }
     }
 }

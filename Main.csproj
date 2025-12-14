@@ -4,8 +4,8 @@
   <PropertyGroup>
     <MSBuildVerbosity>normal</MSBuildVerbosity>
     <TargetFramework>net46</TargetFramework>
-    <AssemblyName>ExampleMod</AssemblyName>
-    <Description>Example code-only mod for Stationeers</Description>
+    <AssemblyName>StationeersDataExtractor</AssemblyName>
+    <Description>Stationeers Data Extraction Mod</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <Deterministic>true</Deterministic>
@@ -13,20 +13,6 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
   </PropertyGroup>
-  <!-- Remove and add VersionInfo.cs to avoid missing it on first build and duplicate compilation on subsequent builds -->
-  <ItemGroup>
-    <Compile Remove="VersionInfo.cs"/>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="VersionInfo.cs"/>
-  </ItemGroup>
-  <Target Name="GetVersionFromPython" BeforeTargets="BeforeBuild">
-    <!-- The argument after create_version_info.py must match the namespace name in Main.cs -->
-    <Exec Command="python3 create_version_info.py ExampleMod"/>
-    <ReadLinesFromFile File="version.txt">
-      <Output TaskParameter="Lines" PropertyName="VersionString"/>
-    </ReadLinesFromFile>
-  </Target>
   <ItemGroup>
     <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -53,7 +39,7 @@
       <HintPath>$(StationeersDllDir)/netstandard.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="netstandard">
+    <Reference Include="UnityEngine.UI">
       <HintPath>$(StationeersDllDir)/UnityEngine.UI.dll</HintPath>
       <Private>false</Private>
     </Reference>

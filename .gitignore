@@ -4,3 +4,5 @@ ori
 VersionInfo.cs
 *.txt
 *.patch
+*.dll
+data

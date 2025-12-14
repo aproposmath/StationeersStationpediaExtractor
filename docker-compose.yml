@@ -1,0 +1,11 @@
+volumes:
+  st-beta:
+
+services:
+  extractor-beta:
+    build:
+      context: ./docker
+      dockerfile: stable.dockerfile
+    volumes:
+      - ./data-beta:/opt/data
+      - st-beta:/root/.steam
