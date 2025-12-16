@@ -6,3 +6,6 @@ VersionInfo.cs
 *.patch
 *.dll
 data
+data-beta
+data-stable
+.github_token

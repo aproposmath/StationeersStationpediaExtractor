@@ -1,11 +1,27 @@
 volumes:
-  st-beta:
+  cmd-stable:
+  cmd-beta:
+  stable:
+  beta:
 
 services:
-  extractor-beta:
+  extractor-stable:
     build:
       context: ./docker
-      dockerfile: stable.dockerfile
+      dockerfile: Dockerfile
     volumes:
-      - ./data-beta:/opt/data
-      - st-beta:/root/.steam
+      - ./data-stable:/opt/data
+      - stable:/home/steam/Steam
+      - cmd-stable:/home/steam/steamcmd
+      - ./BepInEx:/opt/BepInEx
+    entrypoint: ["/opt/run.sh", "public"]
+  # extractor-beta:
+  #   build:
+  #     context: ./docker
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./data-beta:/opt/data
+  #     - beta:/home/steam/Steam
+  #     - cmd-beta:/home/steam/steamcmd
+  #     - ./BepInEx:/opt/BepInEx
+  #   entrypoint: ["/opt/run.sh", "beta"]
