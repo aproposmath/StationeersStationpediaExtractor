@@ -1,0 +1,164 @@
+/* ---------- Root theme ---------- */
+:root {
+  --bg: #0f1220;
+  --panel: #171a2e;
+  --panel-border: #252a4a;
+  --text: #e6e9ff;
+  --muted: #9aa0ff;
+  --accent: #6c8cff;
+  --accent-soft: rgba(108, 140, 255, 0.15);
+  --radius: 12px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Base ---------- */
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: radial-gradient(1200px 600px at top, #1a1f3d, var(--bg));
+  display: flex;
+  gap: 20px;
+  color: var(--text);
+  padding: 2rem;
+  line-height: 1.5;
+  margin: 0;
+  height: 100vh;
+}
+
+/* ---------- Collapsible panels ---------- */
+details {
+  background: linear-gradient(180deg, #1b1f3a, var(--panel));
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+details[open] {
+  animation: expand 0.25s ease-out;
+}
+
+@keyframes expand {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+summary {
+  cursor: pointer;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(90deg, var(--accent-soft), transparent);
+  user-select: none;
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.03em;
+}
+
+summary:hover {
+  background: linear-gradient(90deg, rgba(108, 140, 255, 0.25), transparent);
+}
+
+/* ---------- DataTables ---------- */
+.dataTables_wrapper {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+table.dataTable {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: transparent;
+  color: var(--text);
+}
+
+/* Header */
+table.dataTable thead th {
+  background: rgba(108, 140, 255, 0.15);
+  color: var(--accent);
+  font-weight: 600;
+  border-bottom: 1px solid var(--panel-border);
+  padding: 0.75rem 0.75rem;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+/* Cells */
+table.dataTable tbody td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.9rem;
+}
+
+/* Row hover */
+table.dataTable tbody tr:hover {
+  background: rgba(108, 140, 255, 0.08);
+}
+
+/* Zebra striping */
+table.dataTable.stripe tbody tr.odd,
+table.dataTable.display tbody tr.odd {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ---------- Scroll polish ---------- */
+.dataTables_scrollBody::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar-thumb {
+  background: var(--accent-soft);
+  border-radius: 4px;
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 900px) {
+  body {
+    padding: 1rem;
+  }
+
+  summary h2 {
+    font-size: 1rem;
+  }
+
+  table.dataTable thead th {
+    font-size: 0.7rem;
+  }
+}
+
+#main {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 20px;
+}
+
+#details-pane {
+  width: 500px;
+  border-left: 1px solid #ccc;
+  padding-left: 20px;
+  overflow-y: auto;
+}
+
+table.display {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+#details-pane h2 {
+  margin-top: 0;
+}

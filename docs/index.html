@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Stationpedia Data Explorer</title>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.3.5/css/dataTables.dataTables.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/modern-css-reset/dist/reset.min.css">
+  <link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+  <div id="main">
+    <h1>Stationpedia Data Explorer</h1>
+    <details closed>
+      <summary>
+        <h2>Structures</h2>
+      </summary>
+
+      <table id="structures" class="display">
+      </table>
+    </details>
+
+    <details closed>
+      <summary>
+        <h2>Items</h2>
+      </summary>
+
+      <table id="items" class="display">
+      </table>
+    </details>
+
+    <details closed>
+      <summary>
+        <h2>Food</h2>
+      </summary>
+
+      <table id="foods" class="display">
+      </table>
+    </details>
+
+  </div>
+
+  <div id="details-pane">
+    <h2>Details</h2>
+    <div id="details-content">Click a row to see details here.</div>
+  </div>
+
+  <script>
+    const readData = (data) => {
+      const result = {
+        structures: {},
+        items: {},
+        foods: {},
+        electrics: {},
+        plants: {},
+        slotClasses: {},
+        sortingClasses: {},
+        pages: data.pages,
+      };
+
+
+      for (const page of data.pages) {
+        if (page.BasePowerDraw !== null) {
+          result.electrics[page.Key] = page;
+        }
+
+        var item = page.Item;
+        var slotClass = item?.SlotClass;
+        var sortingClass = item?.SortingClass;
+
+        if (slotClass === "None") {
+          slotClass = null;
+        }
+
+        if (slotClass) {
+          if (!result.slotClasses[slotClass])
+            result.slotClasses[slotClass] = [];
+          result.slotClasses[slotClass].push(page);
+        }
+        if (sortingClass) {
+          if (!result.sortingClasses[sortingClass])
+            result.sortingClasses[sortingClass] = [];
+          result.sortingClasses[sortingClass].push(page);
+        }
+
+        if (page.Structure) {
+          result.structures[page.Key] = page;
+        }
+        if (item) {
+          result.items[page.Key] = page;
+          if (item.Food) {
+            result.foods[page.Key] = page;
+          }
+          if (page.GrowthTime) {
+            result.plants[page.Key] = page;
+          }
+        }
+      }
+
+      return result;
+    }
+
+    const cols = {
+      prefabName: {title: "Name", data: 'PrefabName'},
+      title: {title: "Title", data: 'Title'},
+      prefabHash: {title: "Hash", data: 'PrefabHash'},
+      slotClass: {title: "Slot Class", data: 'Item.SlotClass'},
+      sortingClass: {title: "Sorting Class", data: 'Item.SortingClass'},
+      power: {title: "Power", data: 'BasePowerDraw'},
+      maxPressure: {title: "Max Pressure", data: 'MaxPressure'},
+      growthTime: {title: "Growth Time", data: 'GrowthTime'},
+      nutritionQuality: {title: "Nutrition Quality", data: 'Item.Food.NutritionQuality', defaultContent: ''},
+      nutritionValue: {title: "Nutrition Value", data: 'Item.Food.NutritionValue', defaultContent: ''},
+      moodBonus: {title: "Mood Bonus", data: 'Item.Food.MoodBonus', defaultContent: ''},
+      stackSize: {title: "Stack Size", data: 'Item.MaxQuantity', defaultContent: ''},
+    }
+
+    async function init(url) {
+      const brotliPromise = import("https://unpkg.com/brotli-wasm@3.0.0/index.web.js?module").then(m => m.default);
+
+      const response = await fetch("data.json.br");
+      const buffer = await response.arrayBuffer();
+      const brotli = await brotliPromise;
+      console.log("Brotli loaded", brotli);
+      const decompressed = brotli.decompress(new Uint8Array(buffer));
+      const text = new TextDecoder("utf-8").decode(decompressed);
+      const rawData = JSON.parse(text);
+      console.log("data loaded", rawData);
+      const data = readData(rawData);
+
+      console.log("structures", data.structures);
+
+      const tableOptions = {
+        response: true,
+        paging: false,
+        scrollY: '700px',
+        scrollCollapse: true,
+        fixedHeader: true,
+      };
+
+      let structuresTable = new DataTable('#structures', {
+        data: Object.values(data.structures),
+        columns: [
+          cols.prefabName,
+          cols.title,
+          cols.prefabHash,
+          cols.power,
+          cols.maxPressure,
+        ],
+        ...tableOptions
+      });
+
+      let itemsTable = new DataTable('#items', {
+        data: Object.values(data.items),
+        columns: [
+          cols.prefabName,
+          cols.title,
+          cols.prefabHash,
+          cols.slotClass,
+          cols.sortingClass,
+          cols.stackSize,
+          cols.maxPressure,
+          cols.growthTime,
+        ],
+        ...tableOptions
+      });
+      console.log("foods", Object.values(data.foods));
+
+      let foodsTable = new DataTable('#foods', {
+        data: Object.values(data.foods),
+        columns: [
+          cols.prefabName,
+          cols.title,
+          cols.prefabHash,
+          cols.stackSize,
+          cols.nutritionQuality,
+          cols.nutritionValue,
+          cols.moodBonus,
+        ],
+        ...tableOptions
+      });
+
+      // Add click events to all tables
+      function addClickHandler(table, data) {
+        $(table.table().container()).on('click', 'tbody tr', function () {
+          const rowData = table.row(this).data();
+          renderPage(rowData);
+        });
+      }
+
+      addClickHandler(structuresTable, data.structures);
+      addClickHandler(itemsTable, data.items);
+      addClickHandler(foodsTable, data.foods);
+    }
+
+    function renderPage(page) {
+      const container = $('#details-content');
+      container.empty();
+
+      const pre = $('<pre></pre>').text(JSON.stringify(page, null, 2));
+      container.append(pre);
+    }
+    init();
+  </script>
+
+</body>
+
+</html>
